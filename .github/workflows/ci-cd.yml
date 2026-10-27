@@ -1,10 +1,9 @@
-name: Deploy Ionic App Locally
+name: Anime List CI/CD
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,58 +14,56 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout latest code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests if available
-        run: npm run test --if-present
+      - name: Run tests
+        run: npm test --if-present
 
       - name: Build Ionic application
         run: npm run build
 
   deploy:
     needs: continuous-integration
-    if: github.event_name != 'pull_request'
     runs-on: [self-hosted, Windows, X64]
 
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v4
 
-      - name: Build Ionic image
-        run: docker build -t ionic-firestore-crud-cicd:latest .
+      - name: Build Docker image
+        run: docker build -t anime-list-ionic-web:latest .
 
       - name: Remove previous container
-        run: docker rm -f ionic-firestore-crud-cicd-container
+        run: docker rm -f anime-list-cicd
         continue-on-error: true
 
       - name: Start updated container
-        run: docker run -d --name ionic-firestore-crud-cicd-container --restart unless-stopped -p 8101:8100 ionic-firestore-crud-cicd:latest
+        run: docker run -d --name anime-list-cicd --restart unless-stopped -p 8100:80 anime-list-ionic-web:latest
 
-      - name: Verify app
+      - name: Verify application
         shell: powershell
         run: |
           $success = $false
-
           for ($i = 1; $i -le 15; $i++) {
             try {
-              Invoke-WebRequest -Uri http://localhost:8101/ -UseBasicParsing -TimeoutSec 2 | Out-Null
+              Invoke-WebRequest http://localhost:8100/ -UseBasicParsing -TimeoutSec 2 | Out-Null
               $success = $true
               break
             } catch {
               Start-Sleep -Seconds 2
             }
           }
-
           if (-not $success) {
-            docker logs ionic-firestore-crud-cicd-container
+            docker logs anime-list-cicd
             exit 1
           }
