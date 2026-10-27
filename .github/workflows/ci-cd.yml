@@ -1,46 +1,72 @@
 name: Deploy Ionic App Locally
 
 on:
-push:
-branches:
-- main
-workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
-contents: read
+  contents: read
 
 jobs:
-deploy:
-runs-on: [self-hosted, Windows, X64]
+  continuous-integration:
+    runs-on: windows-latest
 
-steps:
-  - name: Checkout latest code
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
 
-  - name: Build Ionic image
-    run: docker build -t ionic-crud:latest .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
 
-  - name: Remove previous container
-    run: docker rm -f ionic-crud
-    continue-on-error: true
+      - name: Install dependencies
+        run: npm ci
 
-  - name: Start updated container
-    run: docker run -d --name ionic-crud --restart unless-stopped -p 8100:8100 ionic-crud:latest
+      - name: Run tests if available
+        run: npm run test --if-present
 
-  - name: Verify app
-    shell: powershell
-    run: |
-      $success = $false
-      for ($i = 1; $i -le 15; $i++) {
-        try {
-          Invoke-WebRequest http://localhost:8100/ -UseBasicParsing -TimeoutSec 2 | Out-Null
-          $success = $true
-          break
-        } catch {
-          Start-Sleep -Seconds 2
-        }
-      }
-      if (-not $success) {
-        docker logs ionic-crud
-        exit 1
-      }
+      - name: Build Ionic application
+        run: npm run build
+
+  deploy:
+    needs: continuous-integration
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Build Ionic image
+        run: docker build -t ionic-firestore-crud-cicd:latest .
+
+      - name: Remove previous container
+        run: docker rm -f ionic-firestore-crud-cicd-container
+        continue-on-error: true
+
+      - name: Start updated container
+        run: docker run -d --name ionic-firestore-crud-cicd-container --restart unless-stopped -p 8101:8100 ionic-firestore-crud-cicd:latest
+
+      - name: Verify app
+        shell: powershell
+        run: |
+          $success = $false
+
+          for ($i = 1; $i -le 15; $i++) {
+            try {
+              Invoke-WebRequest -Uri http://localhost:8101/ -UseBasicParsing -TimeoutSec 2 | Out-Null
+              $success = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+
+          if (-not $success) {
+            docker logs ionic-firestore-crud-cicd-container
+            exit 1
+          }
