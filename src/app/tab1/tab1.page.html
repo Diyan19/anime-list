@@ -1,17 +1,75 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
     <ion-title>
-      Tab 1
+      Add Anime
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <ion-item>
+    <ion-input
+      label="Title"
+      labelPlacement="stacked"
+      placeholder="Enter anime title"
+      [(ngModel)]="newAnime.title">
+    </ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-input
+      label="Genre"
+      labelPlacement="stacked"
+      placeholder="Enter genre"
+      [(ngModel)]="newAnime.genre">
+    </ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-input
+      type="number"
+      label="Episodes"
+      labelPlacement="stacked"
+      placeholder="Enter number of episodes"
+      [(ngModel)]="newAnime.episodes">
+    </ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-select
+      label="Status"
+      labelPlacement="stacked"
+      [(ngModel)]="newAnime.status">
+
+      <ion-select-option value="Ongoing">
+        Ongoing
+      </ion-select-option>
+
+      <ion-select-option value="Completed">
+        Completed
+      </ion-select-option>
+
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-input
+      type="number"
+      label="Rating"
+      labelPlacement="stacked"
+      placeholder="1 - 10"
+      [(ngModel)]="newAnime.rating">
+    </ion-input>
+  </ion-item>
+
+  <ion-button
+    expand="block"
+    class="ion-margin-top"
+    (click)="addAnime()">
+
+    Add Anime
+
+  </ion-button>
+
 </ion-content>

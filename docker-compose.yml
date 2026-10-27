@@ -1,0 +1,10 @@
+
+services:
+  ionic-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: Anime-List
+    ports:
+      - "8080:80"
+    restart: unless-stopped

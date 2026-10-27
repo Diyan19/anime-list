@@ -1,17 +1,354 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
+
     <ion-title>
-      Tab 2
+      Anime List
     </ion-title>
+
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+<ion-content class="ion-padding">
+
+
+  <!-- ========================= -->
+  <!-- PULL TO REFRESH -->
+  <!-- ========================= -->
+
+  <ion-refresher
+    slot="fixed"
+    (ionRefresh)="refreshAnime($event)">
+
+    <ion-refresher-content
+      pullingText="Pull to refresh"
+      refreshingSpinner="crescent"
+      refreshingText="Refreshing...">
+    </ion-refresher-content>
+
+  </ion-refresher>
+
+
+  <!-- ========================= -->
+  <!-- SEARCH -->
+  <!-- ========================= -->
+
+  <ion-searchbar
+    placeholder="Search anime..."
+    [(ngModel)]="searchTerm">
+  </ion-searchbar>
+
+
+  <!-- ========================= -->
+  <!-- STATUS FILTER -->
+  <!-- ========================= -->
+
+  <ion-segment
+    [(ngModel)]="selectedStatus">
+
+
+    <ion-segment-button
+      value="All">
+
+      <ion-label>
+        All
+      </ion-label>
+
+    </ion-segment-button>
+
+
+    <ion-segment-button
+      value="Ongoing">
+
+      <ion-label>
+        Ongoing
+      </ion-label>
+
+    </ion-segment-button>
+
+
+    <ion-segment-button
+      value="Completed">
+
+      <ion-label>
+        Completed
+      </ion-label>
+
+    </ion-segment-button>
+
+
+  </ion-segment>
+
+
+  <!-- ========================= -->
+  <!-- ANIME LIST -->
+  <!-- ========================= -->
+
+  <ion-list
+    class="ion-margin-top">
+
+
+    @for (
+      anime of filteredAnimeList;
+      track anime.id
+    ) {
+
+
+      <ion-item>
+
+
+        <ion-label>
+
+
+          <h2>
+            {{ anime.title }}
+          </h2>
+
+
+          <p>
+            Genre: {{ anime.genre }}
+          </p>
+
+
+          <p>
+            Episodes: {{ anime.episodes }}
+          </p>
+
+
+          <p>
+            Status: {{ anime.status }}
+          </p>
+
+
+          <p>
+            ⭐ Rating: {{ anime.rating }}
+          </p>
+
+
+        </ion-label>
+
+
+        <!-- UPDATE BUTTON -->
+
+        <ion-button
+          size="small"
+          fill="outline"
+          (click)="openUpdateModal(anime)">
+
+          Update
+
+        </ion-button>
+
+
+        <!-- DELETE BUTTON -->
+
+        <ion-button
+          size="small"
+          color="danger"
+          fill="outline"
+          (click)="deleteAnime(anime.id)">
+
+          Delete
+
+        </ion-button>
+
+
+      </ion-item>
+
+
+    }
+
+
+  </ion-list>
+
+
+  <!-- ========================= -->
+  <!-- NO RESULTS -->
+  <!-- ========================= -->
+
+  @if (
+    filteredAnimeList.length === 0
+  ) {
+
+    <ion-text color="medium">
+
+      <p class="ion-text-center">
+
+        No anime found.
+
+      </p>
+
+    </ion-text>
+
+  }
+
+
+  <!-- ========================= -->
+  <!-- UPDATE MODAL -->
+  <!-- ========================= -->
+
+  <ion-modal
+    [isOpen]="updateModalOpen"
+    (didDismiss)="updateModalOpen = false">
+
+
+    <ng-template>
+
+
+      <ion-header>
+
+        <ion-toolbar>
+
+
+          <ion-title>
+            Update Anime
+          </ion-title>
+
+
+          <ion-buttons slot="end">
+
+            <ion-button
+              (click)="updateModalOpen = false">
+
+              Close
+
+            </ion-button>
+
+          </ion-buttons>
+
+
+        </ion-toolbar>
+
+      </ion-header>
+
+
+      <ion-content
+        class="ion-padding">
+
+
+        <!-- TITLE -->
+
+        <ion-item>
+
+          <ion-input
+            label="Title"
+            labelPlacement="stacked"
+            [(ngModel)]="selectedAnime.title">
+
+          </ion-input>
+
+        </ion-item>
+
+
+        <!-- GENRE -->
+
+        <ion-item>
+
+          <ion-input
+            label="Genre"
+            labelPlacement="stacked"
+            [(ngModel)]="selectedAnime.genre">
+
+          </ion-input>
+
+        </ion-item>
+
+
+        <!-- EPISODES -->
+
+        <ion-item>
+
+          <ion-input
+            type="number"
+            label="Episodes"
+            labelPlacement="stacked"
+            [(ngModel)]="selectedAnime.episodes">
+
+          </ion-input>
+
+        </ion-item>
+
+
+        <!-- STATUS -->
+
+        <ion-item>
+
+          <ion-select
+            label="Status"
+            labelPlacement="stacked"
+            [(ngModel)]="selectedAnime.status">
+
+
+            <ion-select-option
+              value="Ongoing">
+
+              Ongoing
+
+            </ion-select-option>
+
+
+            <ion-select-option
+              value="Completed">
+
+              Completed
+
+            </ion-select-option>
+
+
+          </ion-select>
+
+        </ion-item>
+
+
+        <!-- RATING -->
+
+        <ion-item>
+
+          <ion-input
+            type="number"
+            label="Rating"
+            labelPlacement="stacked"
+            placeholder="1 - 10"
+            [(ngModel)]="selectedAnime.rating">
+
+          </ion-input>
+
+        </ion-item>
+
+
+        <!-- UPDATE BUTTON -->
+
+        <ion-button
+          expand="block"
+          class="ion-margin-top"
+          (click)="saveUpdate()">
+
+          Update Anime
+
+        </ion-button>
+
+
+      </ion-content>
+
+
+    </ng-template>
+
+
+  </ion-modal>
+
+
+  <!-- ========================= -->
+  <!-- TOAST -->
+  <!-- ========================= -->
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [duration]="2000"
+    position="bottom"
+    (didDismiss)="closeToast()">
+
+  </ion-toast>
+
+
 </ion-content>
